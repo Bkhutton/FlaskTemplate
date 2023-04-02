@@ -3,7 +3,7 @@ from flask import Flask
 
 from .database import db
 
-from . import routes
+from . import views
 from config import DevConfig
 
 def create_app(config=None):
@@ -13,7 +13,7 @@ def create_app(config=None):
         app.config.from_object(config)
     else:
         app.config.from_object(DevConfig)
-    routes.init_app(app)
+    views.init_app(app)
     db.init_app(app)
 
     # ensure the instance folder exists
