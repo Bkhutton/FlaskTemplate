@@ -13,4 +13,7 @@ dist/
 build/
 *.egg-info/
 
+.vscode
+.DS_Store
+
 flask_app.sqlite
