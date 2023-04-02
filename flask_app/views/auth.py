@@ -3,36 +3,23 @@ from flask import request, session, g, redirect, flash, url_for, render_template
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_app.database.db import get_db
+from .forms.auth import RegisterForm
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth_bp.route('/register', methods=('GET', 'POST'))
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = RegisterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        username = form.username.data
+        password = form.password.data
         db = get_db()
-        error = None
-        if not username:
-            error = 'Username is required.'
-        elif not password:
-            error = 'Password is required.'
-
-        if error is None:
-            try:
-                db.execute(
-                    "INSERT INTO user (username, password) VALUES (?, ?)",
-                    (username, generate_password_hash(password)),
-                )
-                db.commit()
-            except db.IntegrityError:
-                error = f"User {username} is already registered."
-            else:
-                return redirect(url_for("auth.login"))
-
-        flash(error)
-
-    return render_template('auth/register.html')
+        db.execute("INSERT INTO user (username, password) VALUES (?, ?)",
+            (username, generate_password_hash(password))
+        )
+        db.commit()
+        return redirect(url_for("auth.login"))
+    return render_template('auth/register.html', form=form)
 
 @auth_bp.route('/login', methods=('GET', 'POST'))
 def login():
