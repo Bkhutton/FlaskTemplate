@@ -2,7 +2,8 @@ import functools
 from flask import request, session, g, redirect, flash, url_for, render_template, Blueprint
 from werkzeug.security import check_password_hash
 
-from ..database.interface import get_user_by_id, get_user_by_username, register_user
+from flask_app.database.database import get_db
+
 from .forms.auth import RegisterForm
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -13,7 +14,7 @@ def register():
     if request.method == 'POST' and form.validate():
         username = form.username.data
         password = form.password.data
-        register_user(username, password)
+        get_db().register_user(username, password)
         return redirect(url_for("auth.login"))
     return render_template('auth/register.html', form=form)
 
@@ -23,7 +24,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         error = None
-        user = get_user_by_username(username)
+        user = get_db().get_user_by_username(username)
 
         if user is None:
             error = 'Incorrect username.'
@@ -63,4 +64,4 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = get_user_by_id(user_id)
+        g.user = get_db().get_user_by_id(user_id)

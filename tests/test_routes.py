@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask, Response, g, session
 
-from flask_app.database.db import get_db
+from tests.tests_database.test_sql_database import TestSQLDatabase
 
 def test_register_blueprint(app: Flask):
     assert len(app.blueprints) > 0
@@ -19,11 +19,8 @@ class TestAuth:
         )
         assert response.headers["Location"] == "/auth/login"
 
-        with app.app_context():
-            assert get_db().execute(
-                "SELECT * FROM user WHERE username = 'test1234'",
-            ).fetchone() is not None
-
+        test_db = TestSQLDatabase()
+        test_db.assert_user_exists(app, 'test1234')
 
     @pytest.mark.parametrize(('username', 'password', 'message'), (
         ('test', 'test', b'already registered'),

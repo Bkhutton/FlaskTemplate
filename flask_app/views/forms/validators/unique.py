@@ -1,7 +1,6 @@
 from wtforms import ValidationError
 
-from flask import current_app
-from flask_app.database.db import get_db
+from flask_app.database.database import get_db
 
 class Unique(object):
     def __init__(self, table, field, message=None):
@@ -12,8 +11,5 @@ class Unique(object):
         self.message = message
         
     def __call__(self, form, field):
-        with current_app.app_context():
-            query = f"SELECT * FROM {self.table} WHERE {self.field} = '{field.data}'"
-            query = f"SELECT * FROM {self.table} WHERE {self.field} = ?"
-            if get_db().execute(query, (field.data,)).fetchone() is not None:
-                raise ValidationError(self.message)
+        if get_db().test_if_unique(self.table, self.field, field.data):
+            raise ValidationError(self.message)

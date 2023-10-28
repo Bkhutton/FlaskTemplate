@@ -2,12 +2,10 @@ import pytest
 import tempfile
 import os
 from flask_app import create_app
-from flask_app.database.db import init_db, get_db
+from flask_app.database.database import init_db
 import config
+from tests.tests_database.test_sql_database import TestSQLDatabase
 
-# read in SQL for populating test data
-with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
-    _data_sql = f.read().decode("utf8")
 
 @pytest.fixture()
 def app():
@@ -19,7 +17,8 @@ def app():
     # other setup can go here
     with app.app_context():
         init_db()
-        get_db().executescript(_data_sql)
+        test_db = TestSQLDatabase()
+        test_db.setup()
 
     yield app
 
