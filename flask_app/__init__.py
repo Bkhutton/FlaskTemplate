@@ -1,8 +1,7 @@
 import os
 from flask import Flask
 
-from .database import database
-
+from . import models
 from . import views
 from config import DevConfig
 
@@ -14,7 +13,7 @@ def create_app(config=None):
     else:
         app.config.from_object(DevConfig)
     views.init_app(app)
-    database.init_app(app)
+    models.init_app(app)
 
     # ensure the instance folder exists
     try:

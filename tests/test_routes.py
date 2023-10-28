@@ -1,31 +1,38 @@
 import pytest
 from flask import Flask, Response, g, session
+from flask_app.models.user import User
 
-from tests.tests_database.test_sql_database import TestSQLDatabase
 
 def test_register_blueprint(app: Flask):
     assert len(app.blueprints) > 0
+
 
 class TestIndex:
     def test_index(self, client):
         response: Response = client.get("/")
         assert response.status_code == 200
 
+
 class TestAuth:
     def test_register(self, client, app: Flask):
         assert client.get('/auth/register').status_code == 200
         response = client.post(
-            '/auth/register', data={'username': 'test1234', 'email': 'test@test.com', 'password': 'a', 'confirm': 'a', 'accept_tos': True}
+            '/auth/register', data={'username': 'test1234',
+                                    'email': 'test@test.com',
+                                    'password': 'a', 'confirm': 'a',
+                                    'accept_tos': True}
         )
         assert response.headers["Location"] == "/auth/login"
 
-        test_db = TestSQLDatabase()
-        test_db.assert_user_exists(app, 'test1234')
+        with app.app_context():
+            assert (User.query.filter_by(username='test1234').first()
+                    is not None)
 
     @pytest.mark.parametrize(('username', 'password', 'message'), (
         ('test', 'test', b'already registered'),
     ))
-    def test_register_validate_input(self, client, username, password, message):
+    def test_register_validate_input(self, client, username, password,
+                                     message):
         response = client.post(
             '/auth/register',
             data={'username': username, 'password': password}
@@ -40,8 +47,7 @@ class TestAuth:
         with client:
             client.get('/')
             assert session['user_id'] == 1
-            assert g.user['username'] == 'test'
-
+            assert g.user.username == 'test'
 
     @pytest.mark.parametrize(('username', 'password', 'message'), (
         ('a', 'test', b'Incorrect username.'),

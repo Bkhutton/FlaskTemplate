@@ -1,30 +1,33 @@
 import pytest
-import tempfile
-import os
 from flask_app import create_app
-from flask_app.database.database import init_db
 import config
-from tests.tests_database.test_sql_database import TestSQLDatabase
+from flask_app.models.base import db
+from flask_app.models.user import User
 
 
 @pytest.fixture()
 def app():
-    # create a temporary file to isolate the database for each test
-    db_fd, db_path = tempfile.mkstemp()
-    conf = config.TestConfig
-    conf.DATABASE = db_path
     app = create_app(config=config.TestConfig)
     # other setup can go here
     with app.app_context():
-        init_db()
-        test_db = TestSQLDatabase()
-        test_db.setup()
+        _popualte_database()
 
     yield app
 
     # clean up / reset resources here
-    os.close(db_fd)
-    os.unlink(db_path)
+    with app.app_context():
+        db.drop_all()
+
+
+def _popualte_database():
+    user = User(username="test",
+                email="first_user@gmail.com",
+                password=('pbkdf2:sha256:50000$TCI4GzcX'
+                          '$0de171a4f4dac32e3364c7ddc7c'
+                          '14f3e2fa61f2d17574483f7ffbb431b4acb2f'))
+    db.session.add(user)
+    db.session.commit()
+
 
 @pytest.fixture()
 def client(app):

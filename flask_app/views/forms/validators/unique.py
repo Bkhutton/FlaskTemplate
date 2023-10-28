@@ -1,6 +1,7 @@
+from sqlalchemy import text
 from wtforms import ValidationError
+from flask_app.models.base import db
 
-from flask_app.database.database import get_db
 
 class Unique(object):
     def __init__(self, table, field, message=None):
@@ -9,7 +10,9 @@ class Unique(object):
         if not message:
             message = 'Already used.'
         self.message = message
-        
+
     def __call__(self, form, field):
-        if get_db().test_if_unique(self.table, self.field, field.data):
+        result = db.session.execute(text(f"SELECT * FROM {self.table} WHERE "
+                                         f"{self.field} = '{field.data}'"))
+        if result.first() is not None:
             raise ValidationError(self.message)
