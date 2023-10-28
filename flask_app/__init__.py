@@ -5,6 +5,7 @@ from . import models
 from . import views
 from config import DevConfig
 
+
 def create_app(config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
